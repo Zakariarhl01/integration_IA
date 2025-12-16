@@ -2,18 +2,16 @@ import pandas as pd
 import joblib 
 import numpy as np 
 import os
-import json
+import json 
 
-# Configure l'affichage de la console à 4 décimales pour la vérification
+# Configure l'affichage de la console à 4 décimales pour la vérification (optionnel, mais propre)
 pd.set_option('display.float_format', '{:.4f}'.format) 
 
 # --- CONFIGURATION DES CHEMINS (RELATIFS À LA RACINE DU PROJET - POUR EXECUTION VIA main.py) ---
-DATA_PATH = "../data/energiTech_par_turbine.csv"
-MODEL_PATH = "../models/model_classification.pkl" 
-RESULTS_PATH = "../results/anomalies_non_gerees_final.csv"
-DETECTION_STATS_PATH = "../results/detection_stats.json" 
-
-print("--- DÉBUT DE L'ANALYSE D'ANOMALIES ET INTÉGRATION MODÈLE A ---")
+DATA_PATH = "./data/energiTech_par_turbine.csv"
+MODEL_PATH = "./models/model_classification.pkl" 
+RESULTS_PATH = "./results/anomalies_non_gerees_final.csv"
+DETECTION_STATS_PATH = "./results/detection_stats.json" 
 
 # --- 1. CHARGEMENT DES ACTIFS ---
 try:
@@ -39,7 +37,7 @@ if model_A:
         X_predict = df[FEATURES]
         
         predictions = model_A.predict(X_predict)
-        
+
         probabilities = model_A.predict_proba(X_predict)[:, 1] 
 
         df['prediction_panne_7j'] = predictions
@@ -49,7 +47,7 @@ if model_A:
         print("❌ Certaines colonnes de capteurs requises par le modèle sont manquantes. Prédictions ignorées.")
 
 
-# --- 3. DÉTECTION D'ANOMALIES (MÉTHODE IQR) ---
+# --- 3. DÉTECTION D'ANOMALIES (MÉTHODE IQR & ZÉRO) ---
 numeric_cols = df.select_dtypes(include='number').columns
 
 cols_to_exclude = [
@@ -97,8 +95,9 @@ for col in numeric_cols_for_anomaly_detection:
         anomalies = pd.concat([anomalies] + dfs_to_concat, ignore_index=True)
 
 
-# --- Sauvegarde des Statistiques de Détection Brute ---
+# --- Sauvegarde des Statistiques de Détection Brute (pour Streamlit) ---
 if not anomalies.empty:
+    # Calculer les statistiques de l'ensemble 'anomalies'
     detection_stats = anomalies['anomaly_type'].value_counts().to_dict()
     detection_stats['total_anomalies_detectees'] = len(anomalies)
 
@@ -118,16 +117,10 @@ anomalies_non_gerees = anomalies[
     (anomalies['maintenance_done'] == 0) 
 ].copy()
 
-# Trier par risque de panne
+# Trier par risque de panne 
 anomalies_non_gerees = anomalies_non_gerees.sort_values(
     by='proba_panne', ascending=False
 )
-
-print("\n--- RÉSULTATS : Anomalies non gérées à investiguer (TOP 10) ---")
-print("Ceci croise la détection IQR avec le risque de panne du Modèle A.")
-
-cols_to_display = ['turbine_id', 'date_measure', 'anomaly_column', 'anomaly_type', 'proba_panne', 'prediction_panne_7j', 'maintenance_done']
-print(anomalies_non_gerees[cols_to_display].head(10))       
 
 # --- 5. ENREGISTREMENT DU FICHIER FINAL ---
 os.makedirs(os.path.dirname(RESULTS_PATH), exist_ok=True)

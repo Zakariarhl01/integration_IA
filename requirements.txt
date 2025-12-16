@@ -1,0 +1,6 @@
+# pour lancer l'installation: pip3 install -r requirements.txt
+pandas
+numpy
+scikit-learn
+streamlit
+joblib

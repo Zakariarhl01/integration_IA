@@ -5,9 +5,18 @@ import os
 import numpy as np
 
 # --- CONFIGURATION (Chemins relatifs au script Streamlit) ---
-FINAL_CSV_PATH = "../results/anomalies_non_gerees_final.csv"
-METRICS_JSON_PATH = "../results/evaluation_metrics.json" 
-DETECTION_STATS_PATH = "../results/detection_stats.json" 
+def get_path(filename):
+    """Cherche le fichier dans ./results/ ou ../results/"""
+    path_root = os.path.join("results", filename)
+    path_parent = os.path.join("..", "results", filename)
+    
+    if os.path.exists(path_root):
+        return path_root
+    return path_parent
+
+FINAL_CSV_PATH = get_path("anomalies_non_gerees_final.csv")
+METRICS_JSON_PATH = get_path("evaluation_metrics.json")
+DETECTION_STATS_PATH = get_path("detection_stats.json")
 
 # --- 1. FONCTIONS DE CHARGEMENT DES DONNÉES (AVEC CACHE) ---
 

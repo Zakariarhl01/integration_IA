@@ -4,6 +4,14 @@ import numpy as np
 import os
 import json 
 
+"""
+CONTRAT D'INTERFACE - BACKEND ENERGI-PRO
+-----------------------------------------
+ENTRÉE (CSV) : wind_speed (float), vibration_level (float), temperature (float)
+SORTIE (CSV) : proba_panne (float 0-1), failure_within_7d (int 0/1)
+SÉCURITÉ : Nécessite ENERGI_PRO_API_KEY dans l'environnement.
+"""
+
 # Configure l'affichage de la console à 4 décimales pour la vérification (optionnel, mais propre)
 pd.set_option('display.float_format', '{:.4f}'.format) 
 

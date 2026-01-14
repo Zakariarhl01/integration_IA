@@ -1,86 +1,53 @@
-🚀 Projet EnergiTech : Pipeline de Maintenance Prédictive IA
+🚀 Projet EnergiTech : Backend d'Inférence IA Sécurisé
+Ce projet implémente un pipeline complet de maintenance prédictive pour les éoliennes. Il est conçu comme un service backend d'inférence robuste, respectant les exigences de sécurité et de documentation d'un environnement industriel.
 
-Ce projet implémente un pipeline complet pour la maintenance prédictive des éoliennes. Il combine la détection d'anomalies de capteurs (méthode IQR et Zéro Détection) avec un modèle d'apprentissage automatique (RandomForestClassifier, nommé Modèle A) pour identifier les risques de panne imminente. L'objectif final est de fournir un tableau de bord interactif (via Streamlit) pour prioriser les interventions de maintenance.
+⚙️ Architecture du Système
+Le système suit une architecture de type Batch Processing, orchestrée par un point d'entrée unique. Il intègre une détection d'anomalies hybride (Statistiques + Machine Learning).
 
+🔒 Sécurité et Authentification
+Conformément au cahier des charges, l'accès au moteur d'inférence est protégé par un Token de sécurité.
 
-⚙️ Architecture du Projet
-Le pipeline est orchestré par le script main.py  et suit ces étapes :
+Mécanisme : Vérification de la variable d'environnement ENERGI_PRO_API_KEY.
 
+Protection : Sans une clé valide, le script renvoie une erreur 403 Forbidden et interrompt le traitement pour protéger les modèles propriétaires.
 
-Préparation des Données (trie_du_csv.py) : Trie les données brutes (energiTech_maintenance_sample.csv ) par turbine et par date. Le fichier trié est sauvegardé dans data/energiTech_par_turbine.csv.
+📄 Contrat d'Interface (Documentation API)
+Le service suit un contrat d'interface strict pour garantir l'interopérabilité :
 
+Entrées (Input)
+Fichier CSV structuré contenant : wind_speed, vibration_level, temperature, power_output.
 
-Évaluation du Modèle (test_model.py) : Charge le Modèle A pré-entraîné (model_classification.pkl ), évalue ses performances (Accuracy, Recall, Precision) et sauvegarde les métriques dans results/evaluation_metrics.json.
+Sorties (Output)
+Prédictions : anomalies_non_gerees_final.csv (incluant proba_panne et anomaly_type).
 
+Supervision : detection_stats.json (statistiques en temps réel pour le Dashboard).
 
-Inférence et Détection d'Anomalies (detection_anomalie.py) :
+▶️ Guide d'Exécution
+1. Configuration de la Sécurité
+Créez un fichier .env à la racine ou exportez la clé dans votre terminal :
 
-Exécute la détection d'anomalies (IQR & Zéro) sur les données.
+export ENERGI_PRO_API_KEY="ET-PRO-2026-CONFIDENTIAL"
+2. Lancement du Pipeline (Backend)
+Le pipeline est lancé via le script orchestrateur. Il valide l'authentification, prépare les données, évalue le modèle et génère les inférences.
 
-Exécute le Modèle A pour obtenir la proba_panne (risque à 7 jours).
+ENERGI_PRO_API_KEY="ET-PRO-2026-CONFIDENTIAL" python3 scripts/main.py
 
-Filtre les anomalies déjà gérées (maintenance_done=0).
+Sur Windows (PowerShell) :
 
-Sauvegarde les alertes finales dans results/anomalies_non_gerees_final.csv et les statistiques brutes dans results/detection_stats.json.
+$env:ENERGI_PRO_API_KEY="ET-PRO-2026-CONFIDENTIAL"; python scripts/main.py
 
+3. Visualisation (Frontend)
+Une fois les résultats générés, lancez l'interface de supervision :
 
-Visualisation (streamlit_app.py) : Lit les fichiers générés par les étapes 2 et 3 pour afficher le tableau de bord.
+streamlit run app/streamlit_app.py
 
-🛠️ Installation du Projet
-
-1. Cloner le Dépôt
-
-git clone [https://github.com/Zakariarhl01/integration_IA.git]
-cd integration_IA
-
-2. Création de l'Environnement Virtuel (Recommandé)
-
-python3 -m venv venv
-source venv/bin/activate  # Sous Linux/macOS
-# Pour Windows : venv\Scripts\activate
-
-3. Installation des Dépendances
-
-Installez toutes les bibliothèques nécessaires à partir de votre requirements.txt :
-pip3 install -r requirements.txt
-
-4. Structure des Fichiers Clés
-
-Assurez-vous que la structure de vos dossiers de données et de modèles est la suivante :
+🛠 Structure des Dossiers
 
 .
-├── data/
-│   ├── energiTech_maintenance_sample.csv  # Fichier source initial 
-│   └── energiTech_par_turbine.csv         # Fichier trié (généré par trie_du_csv.py) 
-├── models/
-│   └── model_classification.pkl           # Modèle IA (Modèle A - RandomForestClassifier) 
-├── results/
-│   ├── anomalies_non_gerees_final.csv     # Alertes finales (généré) 
-│   ├── detection_stats.json               # Stats brutes de détection (généré) 
-│   └── evaluation_metrics.json            # Rapport du Modèle A (généré) 
-└── scripts/
-    ├── main.py
-    ├── trie_du_csv.py
-    ├── test_model.py
-    ├── detection_anomalie.py
-    └── streamlit_app.py
-▶️ Exécution du Pipeline
-Le pipeline complet est lancé via le script main.py.
-
-1. Lancer le Pipeline (Étapes 0, 1, et 2)
-Exécutez cette commande depuis le dossier scripts/ ou en référençant le chemin :
-
-python3 scripts/main.py
-Le terminal affichera les messages de succès pour le tri, le test du modèle et la détection d'anomalies.
-
-2. Lancer le Tableau de Bord Streamlit (Étape 3)
-Une fois que main.py a terminé, lancez l'interface pour ouvrir le tableau de bord dans votre navigateur:
-
-python3 -m streamlit run scripts/streamlit_app.py
-Le tableau de bord affichera :
-
-Le Rapport de Conformité du Modèle A (Précision, Rappel, Matrice de Confusion).
-
-Les Statistiques Brutes des capteurs.
-
-Le TOP 5 des alertes prioritaires (filtrées par maintenance_done=0).
+├── data/           # Données SCADA brutes et préparées
+├── models/         # Modèles IA (.pkl) - Accès restreint
+├── results/        # Sorties d'inférence et rapports JSON
+├── scripts/        # Moteur d'inférence et orchestrateur
+├── docs/           # Contrat d'interface détaillé
+├── app/            # Dashboard Streamlit
+└── .env            # Fichier de configuration des secrets

@@ -16,6 +16,15 @@ ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 
 print("--- DÉMARRAGE DU PIPELINE IA ENERGI-TECH ---")
 
+# --- SIMULATION SÉCURITÉ API ---
+API_KEY_ATTENDUE = "ET-PRO-2026-CONFIDENTIAL"
+# On simule la récupération d'un token (via variable d'environnement ou input)
+api_key_fournie = os.getenv("ENERGI_PRO_API_KEY", "CLE_ABSENTE")
+
+if api_key_fournie != API_KEY_ATTENDUE:
+    print("❌ ERREUR 403 : Accès au moteur d'inférence refusé. Token invalide ou absent.")
+    sys.exit(1) # Code d'erreur de sortie sécurisé
+
 # 0. NOUVEAU : Exécuter le script de tri et préparation des données
 print("\n0. Préparation des données (Tri et Sauvegarde)...")
 try:
@@ -79,4 +88,4 @@ except FileNotFoundError:
 print("\n--- PIPELINE PRÊT ---")
 print("3. Lancement de l'interface Streamlit...")
 print("    Exécutez cette commande dans votre terminal :")
-print(f"   python3 -m streamlit run streamlit_app.py")
+print(f"   python3 -m streamlit run app/streamlit_app.py")
